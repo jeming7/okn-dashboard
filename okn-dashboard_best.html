@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OKN Dashboard - All 18 Graphs</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.js"></script>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:-apple-system,sans-serif;background:linear-gradient(135deg,#0f0c29,#302b63,#24243e);min-height:100vh;padding:15px;color:#fff}
+        .container{max-width:1400px;margin:0 auto}
+        .header{text-align:center;margin-bottom:25px}
+        .header h1{font-size:2.2rem;background:linear-gradient(90deg,#00d4ff,#00ff88,#ff00d4);-webkit-background-clip:text;-webkit-text-fill-color:transparent;animation:grad 3s ease infinite;background-size:200% 200%}
+        @keyframes grad{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
+        .header p{color:#a0a0c0;font-size:1rem}
+        .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+        .stat{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:15px;text-align:center;cursor:pointer;transition:all .3s}
+        .stat:hover{transform:translateY(-3px);box-shadow:0 8px 25px rgba(0,212,255,0.3)}
+        .stat .num{font-size:1.8rem;font-weight:bold;background:linear-gradient(90deg,#00d4ff,#00ff88);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+        .stat .lbl{color:#a0a0c0;font-size:.75rem;text-transform:uppercase}
+        .grid{display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-bottom:15px}
+        .card{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:14px;padding:18px}
+        .card h2{color:#00d4ff;font-size:1.1rem;margin-bottom:10px}
+        .chart-box{height:220px;position:relative}
+        #net{width:100%;height:380px;background:rgba(255,255,255,0.02);border-radius:8px;display:block}
+        .legend{display:flex;gap:15px;margin-top:10px;justify-content:center;flex-wrap:wrap}
+        .legend span{display:flex;align-items:center;gap:5px;font-size:.8rem;color:#a0a0c0}
+        .dot{width:10px;height:10px;border-radius:50%}
+        .domains{display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:8px;margin-top:10px}
+        .dom{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:8px;cursor:pointer;transition:all .3s}
+        .dom:hover{background:rgba(0,212,255,0.1);border-color:#00d4ff}
+        .dom h3{color:#00ff88;font-size:.85rem;margin-bottom:2px}
+        .dom p{color:#a0a0c0;font-size:.7rem}
+        .modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:1000;align-items:center;justify-content:center}
+        .modal.active{display:flex}
+        .modal-box{background:linear-gradient(135deg,#1a1a3e,#2d2d5e);border-radius:14px;padding:20px;max-width:450px;width:90%}
+        .modal h2{color:#00d4ff;margin-bottom:12px}
+        .modal .close{float:right;background:none;border:none;color:#fff;font-size:1.2rem;cursor:pointer}
+        .info{background:rgba(255,255,255,0.05);padding:10px;border-radius:8px;border-left:3px solid #00ff88;margin-bottom:8px}
+        .info h4{color:#00ff88;font-size:.85rem}
+        .info p{color:#a0a0c0;font-size:.8rem;line-height:1.4}
+        .badge{position:absolute;top:8px;right:12px;background:rgba(0,255,136,0.2);padding:3px 8px;border-radius:10px;font-size:.7rem;color:#00ff88}
+        .pulse{animation:pulse 2s infinite}
+        @keyframes pulse{0%,100%{opacity:1}50%{opacity:.7}}
+        @media(max-width:700px){.grid,.stats{grid-template-columns:1fr}}
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header"><h1>Open Knowledge Network</h1><p>NSF Proto-OKN — All 18 Knowledge Graphs</p></div>
+    <div class="stats">
+        <div class="stat" onclick="info('g')"><div class="num">18</div><div class="lbl">Graphs</div></div>
+        <div class="stat" onclick="info('d')"><div class="num">15+</div><div class="lbl">Domains</div></div>
+        <div class="stat" onclick="info('e')"><div class="num">1M+</div><div class="lbl">Entities</div></div>
+        <div class="stat" onclick="info('s')"><div class="num pulse">Live</div><div class="lbl">Status</div></div>
+    </div>
+    <div class="grid">
+        <div class="card"><h2>📊 Distribution</h2><div class="chart-box"><canvas id="c1"></canvas></div></div>
+        <div class="card"><h2>🔬 Entity Types</h2><div class="chart-box"><canvas id="c2"></canvas></div></div>
+    </div>
+    <div class="card" style="position:relative">
+        <h2>🌐 All 18 Knowledge Graphs</h2><span class="badge">18 nodes</span>
+        <canvas id="net"></canvas>
+        <div class="legend">
+            <span><div class="dot" style="background:#00d4ff"></div>Health/Biomedical</span>
+            <span><div class="dot" style="background:#00ff88"></div>Environment/Water</span>
+            <span><div class="dot" style="background:#ff00d4"></div>Technology</span>
+            <span><div class="dot" style="background:#ffaa00"></div>Social/Reference</span>
+        </div>
+        <p style="text-align:center;color:#707090;font-size:.7rem;margin-top:8px">Lines show confirmed relationships: SAWGraph project family, UberGraph ontology provision, Wikidata backbone</p>
+    </div>
+    <div class="card">
+        <h2>🗂️ All 18 Domains</h2>
+        <div class="domains" id="doms"></div>
+    </div>
+</div>
+<div class="modal" id="modal"><div class="modal-box"><button class="close" onclick="closeM()">✕</button><h2 id="mt"></h2><div id="mb"></div></div></div>
+<script>
+const D={
+spoke:{n:'SPOKE-KG',d:'Precision Medicine',e:'429K+',t:'Integrates NASA GeneLab with health data'},
+ubergraph:{n:'UberGraph',d:'Biomedical Ontologies',e:'50M+',t:'OBO ontologies with inferred relationships'},
+biohealth:{n:'BioHealth',d:'Healthcare',e:'15K+',t:'Biomedical + social determinants'},
+biobricks:{n:'BioBricks-ICE',d:'Chemical Safety',e:'10K+',t:'Cheminformatics knowledge'},
+geoconnex:{n:'GeoConnex',d:'Water Resources',e:'303K+',t:'U.S. hydrologic features'},
+hydrologykg:{n:'HydrologyKG',d:'Hydrology',e:'25K+',t:'SAWGraph hydrological data'},
+sawgraph:{n:'SAWGraph',d:'Water Quality',e:'50K+',t:'PFAS and contaminant monitoring'},
+fiokg:{n:'FIO-KG',d:'Food Safety',e:'20K+',t:'Food/water contaminants'},
+climatepub4kg:{n:'ClimatePub4KG',d:'Climate Science',e:'17K+',t:'Climate models & variables'},
+wildlifekg:{n:'WildlifeKG',d:'Wildlife',e:'15K+',t:'Wildlife & climate change'},
+sockg:{n:'SOCKG',d:'Soil Carbon',e:'25K+',t:'Carbon market modeling'},
+spatialkg:{n:'SpatialKG',d:'Geographic',e:'100K+',t:'Spatial/location data'},
+securechainkg:{n:'SecureChainKG',d:'Software Security',e:'20K+',t:'Supply chain security'},
+sudokn:{n:'SUDOKN',d:'Manufacturing',e:'30K+',t:'SME capabilities'},
+scales:{n:'SCALES',d:'Criminal Justice',e:'10K+',t:'Justice platform'},
+dreamkg:{n:'DreamKG',d:'Social Services',e:'5K+',t:'Homelessness with AI'},
+semopenalex:{n:'SemOpenAlex',d:'Publications',e:'100M+',t:'Scientific publication metadata'},
+wikidata:{n:'Wikidata',d:'Knowledge Backbone',e:'100M+',t:'Universal knowledge base'}
+};
+const icons={spoke:'🧬',ubergraph:'🔬',biohealth:'🏥',biobricks:'🧪',geoconnex:'💧',hydrologykg:'🌊',sawgraph:'🥦',fiokg:'🍎',climatepub4kg:'🌡️',wildlifekg:'🦌',sockg:'🌱',spatialkg:'🗺️',securechainkg:'🔒',sudokn:'🏭',scales:'⚖️',dreamkg:'🏘️',semopenalex:'📚',wikidata:'🌍'};
+let html='';for(let k in D)html+=`<div class="dom" onclick="show('${k}')"><h3>${icons[k]} ${D[k].n}</h3><p>${D[k].d}</p></div>`;
+document.getElementById('doms').innerHTML=html;
+
+new Chart(document.getElementById('c1'),{type:'bar',data:{labels:['Health/Biomedical','Environment/Water','Technology','Social/Reference'],datasets:[{data:[4,8,2,4],backgroundColor:['#00d4ff','#00ff88','#ff00d4','#ffaa00']}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,scales:{x:{ticks:{color:'#a0a0c0',stepSize:1},grid:{color:'rgba(255,255,255,0.1)'}},y:{ticks:{color:'#a0a0c0'},grid:{color:'rgba(255,255,255,0.1)'}}},plugins:{legend:{display:false},title:{display:true,text:'Number of Graphs per Category',color:'#a0a0c0',font:{size:11}}}}});
+new Chart(document.getElementById('c2'),{type:'bar',data:{labels:['Organisms','Locations','Concepts','Pubs','Chemicals'],datasets:[{data:[321442,201357,50000,1e8,10000],backgroundColor:'rgba(0,212,255,0.6)'}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,scales:{x:{type:'logarithmic',ticks:{color:'#a0a0c0'},grid:{color:'rgba(255,255,255,0.1)'}},y:{ticks:{color:'#a0a0c0'},grid:{color:'rgba(255,255,255,0.1)'}}},plugins:{legend:{display:false}}}});
+
+const cv=document.getElementById('net'),cx=cv.getContext('2d');
+cv.width=cv.offsetWidth*2;cv.height=cv.offsetHeight*2;cx.scale(2,2);
+const W=cv.offsetWidth,H=cv.offsetHeight,CX=W/2,CY=H/2;
+const col={c:'#fff',h:'#00d4ff',e:'#00ff88',t:'#ff00d4',s:'#ffaa00'};
+const nodes=[{id:'OKN',x:CX,y:CY,r:28,g:'c',f:1},
+{id:'SPOKE',r:15,g:'h'},{id:'UberGraph',r:14,g:'h'},{id:'BioHealth',r:11,g:'h'},{id:'BioBricks',r:10,g:'h'},
+{id:'GeoConnex',r:14,g:'e'},{id:'HydroKG',r:10,g:'e'},{id:'SAWGraph',r:11,g:'e'},{id:'FIO-KG',r:9,g:'e'},
+{id:'Climate',r:11,g:'e'},{id:'Wildlife',r:10,g:'e'},{id:'SOCKG',r:9,g:'e'},{id:'SpatialKG',r:10,g:'e'},
+{id:'SecureChain',r:10,g:'t'},{id:'SUDOKN',r:10,g:'t'},
+{id:'SCALES',r:10,g:'s'},{id:'DreamKG',r:9,g:'s'},{id:'OpenAlex',r:13,g:'s'},{id:'Wikidata',r:14,g:'s'}];
+const out=nodes.slice(1);
+out.forEach((n,i)=>{const a=(i/out.length)*Math.PI*2-Math.PI/2;n.x=CX+Math.cos(a)*140;n.y=CY+Math.sin(a)*140;n.vx=0;n.vy=0;});
+// CONFIRMED relationships only:
+// 1. SAWGraph family (same NSF project): SAWGraph, HydrologyKG, FIO-KG
+// 2. UberGraph provides OBO ontologies used by biomedical graphs
+// 3. Wikidata is designated "universal backbone"
+const links=[
+  ...out.map(n=>['OKN',n.id]),
+  // SAWGraph project family (confirmed - same project)
+  ['SAWGraph','HydroKG'],['SAWGraph','FIO-KG'],['HydroKG','FIO-KG'],
+  // UberGraph provides ontologies for biomedical KGs
+  ['UberGraph','SPOKE'],['UberGraph','BioHealth'],['UberGraph','BioBricks'],
+  // Wikidata as universal backbone (by OKN design)
+  ['Wikidata','SpatialKG']
+];
+const gn=id=>nodes.find(n=>n.id===id);
+function sim(){
+  nodes.forEach(n=>{if(!n.f){n.vx+=(CX-n.x)*.0008;n.vy+=(CY-n.y)*.0008;}});
+  for(let i=0;i<nodes.length;i++)for(let j=i+1;j<nodes.length;j++){
+    const a=nodes[i],b=nodes[j],dx=b.x-a.x,dy=b.y-a.y,d=Math.hypot(dx,dy)||1,m=a.r+b.r+12;
+    if(d<m){const f=(m-d)*.04,fx=dx/d*f,fy=dy/d*f;if(!a.f){a.vx-=fx;a.vy-=fy;}if(!b.f){b.vx+=fx;b.vy+=fy;}}}
+  links.forEach(([s,t])=>{const a=gn(s),b=gn(t);if(!a||!b)return;const dx=b.x-a.x,dy=b.y-a.y,d=Math.hypot(dx,dy)||1,tg=s==='OKN'?110:70,f=(d-tg)*.002,fx=dx/d*f,fy=dy/d*f;if(!a.f){a.vx+=fx;a.vy+=fy;}if(!b.f){b.vx-=fx;b.vy-=fy;}});
+  nodes.forEach(n=>{if(n.f)return;n.vx*=.9;n.vy*=.9;n.x+=n.vx;n.y+=n.vy;n.x=Math.max(n.r+5,Math.min(W-n.r-5,n.x));n.y=Math.max(n.r+5,Math.min(H-n.r-5,n.y));});
+}
+function draw(){
+  cx.clearRect(0,0,W,H);
+  cx.strokeStyle='rgba(255,255,255,.12)';cx.lineWidth=1;
+  links.forEach(([s,t])=>{const a=gn(s),b=gn(t);if(!a||!b)return;cx.beginPath();cx.moveTo(a.x,a.y);cx.lineTo(b.x,b.y);cx.stroke();});
+  nodes.forEach(n=>{
+    const gr=cx.createRadialGradient(n.x,n.y,0,n.x,n.y,n.r*1.3);gr.addColorStop(0,col[n.g]);gr.addColorStop(1,'transparent');
+    cx.fillStyle=gr;cx.beginPath();cx.arc(n.x,n.y,n.r*1.3,0,Math.PI*2);cx.fill();
+    cx.fillStyle=col[n.g];cx.beginPath();cx.arc(n.x,n.y,n.r,0,Math.PI*2);cx.fill();
+    cx.strokeStyle='rgba(255,255,255,.4)';cx.stroke();
+    cx.fillStyle='#b0b0c0';cx.font='8px sans-serif';cx.textAlign='center';cx.fillText(n.id,n.x,n.y+n.r+10);
+  });
+}
+function anim(){sim();draw();requestAnimationFrame(anim);}anim();
+let drag=null;
+cv.onmousedown=e=>{const r=cv.getBoundingClientRect(),mx=e.clientX-r.left,my=e.clientY-r.top;nodes.forEach(n=>{if(Math.hypot(mx-n.x,my-n.y)<n.r)drag=n;});};
+cv.onmousemove=e=>{if(!drag)return;const r=cv.getBoundingClientRect();drag.x=e.clientX-r.left;drag.y=e.clientY-r.top;drag.vx=0;drag.vy=0;};
+cv.onmouseup=cv.onmouseleave=()=>{drag=null;};
+
+function show(k){const d=D[k];document.getElementById('mt').textContent=d.n;document.getElementById('mb').innerHTML=`<div class="info"><h4>Domain</h4><p>${d.d}</p></div><div class="info"><h4>Entities</h4><p>${d.e}</p></div><div class="info"><h4>Description</h4><p>${d.t}</p></div><div class="info"><h4>Endpoint</h4><p style="font-family:monospace;font-size:.75rem">frink.apps.renci.org/${k}/sparql</p></div>`;document.getElementById('modal').classList.add('active');}
+function info(t){const i={g:{t:'18 Knowledge Graphs',b:'All 18 specialized graphs accessible via FRINK platform with standardized SPARQL APIs.'},d:{t:'15+ Domains',b:'Precision medicine, hydrology, climate, chemical safety, social services, manufacturing, and more.'},e:{t:'1M+ Entities',b:'Over 100 million entities including organisms, locations, publications, and relationships.'},s:{t:'Live & Operational',b:'Production-ready at frink.apps.renci.org with real-time federated querying.'}};document.getElementById('mt').textContent=i[t].t;document.getElementById('mb').innerHTML=`<div class="info"><p>${i[t].b}</p></div>`;document.getElementById('modal').classList.add('active');}
+function closeM(){document.getElementById('modal').classList.remove('active');}
+document.getElementById('modal').onclick=e=>{if(e.target.id==='modal')closeM();};
+</script>
+</body>
+</html>
