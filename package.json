@@ -1,18 +1,28 @@
 {
-  "name": "okn-dashboard",
+  "name": "okn-mcp-server",
   "version": "1.0.0",
-  "description": "Open Knowledge Network Dashboard - 18 Knowledge Graphs",
-  "main": "server.js",
+  "description": "Model Context Protocol server for querying Open Knowledge Network knowledge graphs on FRINK",
+  "type": "module",
+  "main": "okn-mcp-server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node okn-mcp-server.js",
+    "dev": "nodemon okn-mcp-server.js"
   },
-  "keywords": ["okn", "knowledge-graph", "dashboard"],
+  "keywords": [
+    "mcp",
+    "sparql",
+    "knowledge-graph",
+    "okn",
+    "frink",
+    "rdf"
+  ],
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "express": "^4.18.2"
+    "@modelcontextprotocol/sdk": "^0.5.0",
+    "node-fetch": "^3.3.2"
   },
-  "engines": {
-    "node": ">=18.0.0"
+  "devDependencies": {
+    "nodemon": "^3.0.0"
   }
 }
